@@ -3,7 +3,7 @@
 #
 # use_mit_license()
 
-# install.packages("roxygen2)
+# install.packages("roxygen2")
 # library(roxygen2)
 #
 # document()
