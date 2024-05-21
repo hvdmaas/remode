@@ -1,8 +1,8 @@
 Package: remode
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Recursive Mode Detection for Distributions of Ordinal Data
 Version: 0.1.0
-Author: Who wrote it
+Author: Han van der Maas, Madlen Hoffstadt, Javier Garcia-Bernardo
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
