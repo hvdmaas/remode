@@ -28,12 +28,14 @@ jacknife= function(xt,percentage){
 #' it calculates the mean and most frequent number of modes based on the `remode` function applied to the jackknife samples.
 #' It then checks if the majority of the iterations yield the same number of modes as the original result.
 #' The robustness of the mode estimation is determined by the maximum percentage of data removal for which the majority
-#' of iterations still find the original number of modes.
+#' of iterations still find the original number of modes. Using the same logic, this method furthermore checks the robustness of location at which a mode is detected:
+#' It estimates the percentage of data that can be removed to still find a mode at this location in the majority of iterations.
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{jacknife_df}{A data frame with the results of the jackknife resampling, including mean modality, most frequent modality, and majority result for each percentage of data removed.}
+#'   \item{num_mode_robustness}{A data frame with the results of the jackknife resampling, including mean modality, most frequent modality, and majority result for each percentage of data removed.}
 #'   \item{robust_until}{The maximum percentage of data that can be removed while still retaining the original number of modes in the majority of iterations.}
+#'   \item{location_robustness}{A data frame storing the location of each detected mode as well as a robustness estimate for this mode, calculated as the percentage of data that can be removed to still detect the mode at this location in the majority of iterations.}
 #' }
 #'
 #' @examples
@@ -43,34 +45,51 @@ jacknife= function(xt,percentage){
 #' print(robustness)
 #'
 #' @export
-remode_robustness <- function(remode_result, iterations = 100, percentage_steps = 20, plot = T){
+remode_robustness <- function(remode_result, iterations = 100, percentage_steps = 10, plot = T){
 
-  modes <- data.frame(perc = seq(0, 100, by = (100/percentage_steps)), mean_modality = NA, most_freq_modality=NA, majority_result = NA)
-  modes$mean_modality[1] <- remode_result$nr_of_modes # 0% means no jacknife (i.e., result)
+  # Initialize the percentage steps and create a data frame to store results
+  modes <- data.frame(perc = seq(0, 100, by = (100/percentage_steps)),
+                      mean_modality = NA,
+                      most_freq_modality=NA,
+                      majority_result = NA)
+  # Set initial values for 0% removed data
+  modes$mean_modality[1] <- remode_result$nr_of_modes
   modes$most_freq_modality[1] <- remode_result$nr_of_modes
   modes$majority_result[1] <- 1
+
+  # Initialize matrix to store data counts of mode locations
+  modes_locations=matrix(0,percentage_steps+1,length(remode_result$xt))
+  modes_locations[1,remode_result$modes]=iterations
+
+  # Loop through each percentage step
   m=integer(iterations)
-  # for each jacknife proportion
   for(i in 2:(percentage_steps)){
+    # Perform iterations of jackknife and remode
     for(j in 1:iterations){
       xt_jacknifed <- jacknife(remode_result$xt, percentage = modes$perc[i])
-      m[j] <- c(remode(xt_jacknifed, alpha = remode_result$alpha,
-                       alpha_correction = remode_result$alpha_correction)$nr_of_modes[1])
+      r <- remode(xt_jacknifed, alpha = remode_result$alpha,
+                  alpha_correction = remode_result$alpha_correction)
+      m[j] <- r$nr_of_modes[1]  # Store number of modes found in each iteration
+      modes_locations[i,r$modes]= modes_locations[i,r$modes] + 1 # Update mode location matrix
     }
-    # get mean and mode of estimated modalities, check if majority of runs find initial result
+
+    # Calculate mean and most frequent modality count for the current percentage step
     modes$mean_modality[i] <- mean(m)
     modes$most_freq_modality[i] <- as.numeric(names(which.max(table(m))))
+    # Determine if the majority of iterations find the initial result
     modes$majority_result[i] <- (sum(m == remode_result$nr_of_modes)/iterations) >= 0.5
   }
 
+  # Handle case where 100% of data is removed
   modes$mean_modality[nrow(modes)] <- 0  # if 100% deleted
   modes$most_freq_modality[nrow(modes)] <- 0
   modes$majority_result[nrow(modes)] <- 0
+  modes_locations[nrow(modes),] <- 0
 
-  # how robust is the mode estimation?
+  # Determine robustness until which percentage of data can be removed while still finding initial result
   robust_until <- max(modes$perc[modes$majority_result == 1])
 
-  # plot
+  # plot if TRUE
   if(plot){
     plot(modes$perc, modes$mean_modality, type="S", col = "red", frame = F,
          main=paste0("Modes : ", remode_result$nr_of_modes,", Robustness: ", robust_until ," % of data can be removed"),
@@ -81,7 +100,14 @@ remode_robustness <- function(remode_result, iterations = 100, percentage_steps 
            col=c("red", "blue"), lty=1:2, cex=0.8,bty='n')
   }
 
+  # Calculate the robustness of the location of detected modes
+  robustness_location=apply(modes_locations,2,function(x) (which.min(x>(iterations/2))-1)/nrow(modes_locations))
+  robustness_location=robustness_location[robustness_location>0]
+  robustness_location=cbind(sort(remode_result$modes),robustness_location)
+  colnames(robustness_location) <- c("Mode location", "Robustness estimate")
+
   return(list(
-    "jacknife_df" = modes,
-    "robust_until" = robust_until)) # based on majority of iterations finding initial modality
+    "num_mode_robustness" = modes, # Df containing robustness of number of modes
+    "robust_until" = robust_until, #  # Percentage of data until which initial result is robust
+    "location_robustness" = robustness_location)) # Location of robustness based on majority iterations
 }
