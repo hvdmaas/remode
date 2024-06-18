@@ -87,9 +87,10 @@ remode_robustness <- function(remode_result, iterations = 100, percentage_steps 
   modes_locations[nrow(modes),] <- 0
 
   # Determine robustness until which percentage of data can be removed while still finding initial result
-  robust_until <- max(modes$perc[modes$majority_result == 1])
+  #robust_until <- max(modes$perc[modes$majority_result == 1])
+  robust_until <- max(modes$perc[(modes$majority_result==1) & (modes$most_freq_modality==remode_result$nr_of_modes)])
 
-  # plot if TRUE
+    # plot if TRUE
   if(plot){
     plot(modes$perc, modes$mean_modality, type="S", col = "red", frame = F,
          main=paste0("Modes : ", remode_result$nr_of_modes,", Robustness: ", robust_until ," % of data can be removed"),
