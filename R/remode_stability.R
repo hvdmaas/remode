@@ -1,4 +1,4 @@
-# Code for top-level remode_robustness function, performing robustness check on
+# Code for top-level remode_stability function, performing stability check on
 # result of remode(), as well as lower-level helper function
 
 # Helper function: jacknife
@@ -11,12 +11,12 @@ jacknife= function(xt,percentage){
 }
 
 # Main function ----
-#' Assess Robustness of Mode Estimation Using Jackknife Resampling
+#' Assess stability of Mode Estimation Using Jackknife Resampling
 #'
-#' The `remode_robustness` function evaluates the robustness of the mode estimation (output of remode() function)
+#' The `remode_stability` function evaluates the stability of the mode estimation (output of remode() function)
 #' by performing jackknife resampling. It generates a series of jackknife samples,
 #' calculates the mean and most frequent number of modes for each sample, and determines
-#' the robustness of the original mode estimate.
+#' the stability of the original mode estimate.
 #'
 #' @param remode_result A list of class `remode_result` containing the output of the `remode` function.
 #' @param iterations An integer specifying the number of jackknife samples to generate for each percentage step. Default is 100.
@@ -27,25 +27,25 @@ jacknife= function(xt,percentage){
 #' The function generates jackknife samples by systematically removing increasing percentages of data. For each percentage step,
 #' it calculates the mean and most frequent number of modes based on the `remode` function applied to the jackknife samples.
 #' It then checks if the majority of the iterations yield the same number of modes as the original result.
-#' The robustness of the mode estimation is determined by the maximum percentage of data removal for which the majority
-#' of iterations still find the original number of modes. Using the same logic, this method furthermore checks the robustness of location at which a mode is detected:
+#' The stability of the mode estimation is determined by the maximum percentage of data removal for which the majority
+#' of iterations still find the original number of modes. Using the same logic, this method furthermore checks the stability of location at which a mode is detected:
 #' It estimates the percentage of data that can be removed to still find a mode at this location in the majority of iterations.
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{num_mode_robustness}{A data frame with the results of the jackknife resampling, including mean modality, most frequent modality, and majority result for each percentage of data removed.}
-#'   \item{robust_until}{The maximum percentage of data that can be removed while still retaining the original number of modes in the majority of iterations.}
-#'   \item{location_robustness}{A data frame storing the location of each detected mode as well as a robustness estimate for this mode, calculated as the percentage of data that can be removed to still detect the mode at this location in the majority of iterations.}
+#'   \item{num_mode_stability}{A data frame with the results of the jackknife resampling, including mean modality, most frequent modality, and majority result for each percentage of data removed.}
+#'   \item{stable_until}{The maximum percentage of data that can be removed while still retaining the original number of modes in the majority of iterations.}
+#'   \item{location_stability}{A data frame storing the location of each detected mode as well as a stability estimate for this mode, calculated as the percentage of data that can be removed to still detect the mode at this location in the majority of iterations.}
 #' }
 #'
 #' @examples
 #' data <- c(80, 90, 110, 70, 90)
 #' result <- remode(data, alpha_correction = "max_modes")
-#' robustness <- remode_robustness(result, iterations = 100, percentage_steps = 20, plot = TRUE)
-#' print(robustness)
+#' stability <- remode_stability(result, iterations = 100, percentage_steps = 20, plot = TRUE)
+#' print(stability)
 #'
 #' @export
-remode_robustness <- function(remode_result, iterations = 100, percentage_steps = 10, plot = T){
+remode_stability <- function(remode_result, iterations = 100, percentage_steps = 10, plot = T){
 
   # Initialize the percentage steps and create a data frame to store results
   modes <- data.frame(perc = seq(0, 100, by = (100/percentage_steps)),
@@ -86,14 +86,14 @@ remode_robustness <- function(remode_result, iterations = 100, percentage_steps 
   modes$majority_result[nrow(modes)] <- 0
   modes_locations[nrow(modes),] <- 0
 
-  # Determine robustness until which percentage of data can be removed while still finding initial result
-  #robust_until <- max(modes$perc[modes$majority_result == 1])
-  robust_until <- max(modes$perc[(modes$majority_result==1) & (modes$most_freq_modality==remode_result$nr_of_modes)])
+  # Determine stability until which percentage of data can be removed while still finding initial result
+  #stable_until <- max(modes$perc[modes$majority_result == 1])
+  stable_until <- max(modes$perc[(modes$majority_result==1) & (modes$most_freq_modality==remode_result$nr_of_modes)])
 
     # plot if TRUE
   if(plot){
     plot(modes$perc, modes$mean_modality, type="S", col = "red", frame = F,
-         main=paste0("Modes : ", remode_result$nr_of_modes,", Robustness: ", robust_until ," % of data can be removed"),
+         main=paste0("Modes : ", remode_result$nr_of_modes,", stability: ", stable_until ," % of data can be removed"),
          xlab="Percentage of removed data",
          ylab="Modality")
     lines(modes$perc, modes$most_freq_modality, type="S", col="blue", lty = 2)
@@ -101,14 +101,14 @@ remode_robustness <- function(remode_result, iterations = 100, percentage_steps 
            col=c("red", "blue"), lty=1:2, cex=0.8,bty='n')
   }
 
-  # Calculate the robustness of the location of detected modes
-  robustness_location=apply(modes_locations,2,function(x) (which.min(x>(iterations/2))-1)/nrow(modes_locations))
-  robustness_location=robustness_location[robustness_location>0]
-  robustness_location=cbind(sort(remode_result$modes),robustness_location)
-  colnames(robustness_location) <- c("Mode location", "Robustness estimate")
+  # Calculate the stability of the location of detected modes
+  stability_location=apply(modes_locations,2,function(x) (which.min(x>(iterations/2))-1)/nrow(modes_locations))
+  stability_location=stability_location[stability_location>0]
+  stability_location=cbind(sort(remode_result$modes),stability_location)
+  colnames(stability_location) <- c("Mode location", "Stability estimate")
 
   return(list(
-    "num_mode_robustness" = modes, # Df containing robustness of number of modes
-    "robust_until" = robust_until, #  # Percentage of data until which initial result is robust
-    "location_robustness" = robustness_location)) # Location of robustness based on majority iterations
+    "num_mode_stability" = modes, # Df containing stability of number of modes
+    "stable_until" = stable_until, #  # Percentage of data until which initial result is stable
+    "location_stability" = stability_location)) # Location of stability based on majority iterations
 }
