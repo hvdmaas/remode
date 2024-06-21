@@ -2,4 +2,4 @@
 
 S3method(barplot,remode_result)
 export(remode)
-export(remode_robustness)
+export(remode_stability)
