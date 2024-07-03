@@ -47,6 +47,8 @@ jacknife= function(xt,percentage){
 #' @export
 remode_stability <- function(remode_result, iterations = 100, percentage_steps = 10, plot = T){
 
+  if(length(remode_result$modes) == 0) stop("It appears that either the remode algorithm was not yet applied or that no modes were found. Stability analyses can only be conducted for modes detected by remode().")
+
   # Initialize the percentage steps and create a data frame to store results
   modes <- data.frame(perc = seq(0, 100, by = (100/percentage_steps)),
                       mean_modality = NA,
