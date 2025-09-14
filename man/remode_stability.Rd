@@ -2,7 +2,7 @@
 % Please edit documentation in R/remode_stability.R
 \name{remode_stability}
 \alias{remode_stability}
-\title{Assess stability of Mode Estimation Using Jackknife Resampling}
+\title{Barplot for remode result}
 \usage{
 remode_stability(
   remode_result,
@@ -12,40 +12,32 @@ remode_stability(
 )
 }
 \arguments{
-\item{remode_result}{A list of class `remode_result` containing the output of the `remode` function.}
+\item{remode_result}{A list of class `remode_result`, output of remode() function}
 
-\item{iterations}{An integer specifying the number of jackknife samples to generate for each percentage step. Default is 100.}
+\item{iterations}{Numeric value specifying the number of random sub-samples to generate for each percentage step. Default is 100.}
 
-\item{percentage_steps}{An integer specifying the number of percentage steps for data removal in the jackknife resampling. Default is 20 (i.e., steps of 5%).}
+\item{percentage_steps}{An integer specifying the number of percentage steps for data removal. Default is 20 (i.e. steps of 5).}
 
-\item{plot}{A logical value indicating whether to plot the results. Default is TRUE.}
+\item{plot}{Logical value indicating wether to plot the results. Default is TRUE.}
 }
 \value{
-A list containing:
-\describe{
-  \item{num_mode_stability}{A data frame with the results of the jackknife resampling, including mean modality, most frequent modality, and majority result for each percentage of data removed.}
-  \item{stable_until}{The maximum percentage of data that can be removed while still retaining the original number of modes in the majority of iterations.}
-  \item{location_stability}{A data frame storing the location of each detected mode as well as a stability estimate for this mode, calculated as the percentage of data that can be removed to still detect the mode at this location in the majority of iterations.}
-}
+A list containing the stability analysis results.
 }
 \description{
-The `remode_stability` function evaluates the stability of the mode estimation (output of remode() function)
-by performing jackknife resampling. It generates a series of jackknife samples,
-calculates the mean and most frequent number of modes for each sample, and determines
-the stability of the original mode estimate.
-}
-\details{
-The function generates jackknife samples by systematically removing increasing percentages of data. For each percentage step,
-it calculates the mean and most frequent number of modes based on the `remode` function applied to the jackknife samples.
-It then checks if the majority of the iterations yield the same number of modes as the original result.
-The stability of the mode estimation is determined by the maximum percentage of data removal for which the majority
-of iterations still find the original number of modes. Using the same logic, this method furthermore checks the stability of location at which a mode is detected:
-It estimates the percentage of data that can be removed to still find a mode at this location in the majority of iterations.
+The `remode_stability` function evaluates the stability of the mode estimation
+by performing jacknife resampling. It generates
+a series of jackknife resamples, calculates the mean and most frequent number of modes for
+each sample, and determines the stability of the original modality estimate.
+Stability is determined by te maximum percentage of data removal for which the
+majority of iterations still find the original number of modes.
+Using the same logic, this method also checks the stability of estimated mode location.
 }
 \examples{
+# run remode algorithm
 data <- c(80, 90, 110, 70, 90)
-result <- remode(data, alpha_correction = "max_modes")
-stability <- remode_stability(result, iterations = 100, percentage_steps = 20, plot = TRUE)
-print(stability)
+result <- remode(data)
+
+# check stability of remode result
+remode_stability(result)
 
 }

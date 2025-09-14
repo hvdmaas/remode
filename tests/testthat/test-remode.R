@@ -5,10 +5,11 @@
 # Define the expected result for comparison
 expected_result <- list(
  nr_of_modes = 2,
- modes = c(8, 3),
- xt = c(70, 80, 110, 30, 70, 100, 90, 120),
+ mode_indeces = c(8, 3),
+ frequency_input_data = c(70, 80, 110, 30, 70, 100, 90, 120),
  alpha = 0.05,
- alpha_correction = c("none", "max_modes")
+ alpha_corrected=0.0125,
+ alpha_correction = "max_modes"
 )
 class(expected_result) <- "remode_result"
 
@@ -19,9 +20,9 @@ test_that("remode() returns correct result", {
  # Check if the number of modes is correct
  expect_equal(result$nr_of_modes, expected_result$nr_of_modes)
  # Check if the modes are correct
- expect_equal(result$modes, expected_result$modes)
+ expect_equal(result$mode_indeces, expected_result$mode_indeces)
  # Check if the input data is correct
- expect_equal(result$xt, expected_result$xt)
+ expect_equal(result$frequency_input_data, expected_result$frequency_input_data)
  # Check if the alpha value is correct
  expect_equal(result$alpha, expected_result$alpha)
  # Check if the alpha correction method is correct
@@ -33,6 +34,3 @@ test_that("remode() returns warning if c > 50 and no warning if c < 50", {
 expect_warning(remode(1:51), "raw")
 expect_no_warning(remode(1:49), message = "raw")
 })
-
-# remode prints output to console if check = TRUE
-# ?
