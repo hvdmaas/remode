@@ -243,7 +243,7 @@ print.remode_result <- function(x, ...) {
           "and approx BF =", x$approx_bayes_factors[[i]], "\n")
     }
 
-    cat("\nParameters used: alpha = ", x$alpha * 100, "%, ",
+    cat("\nParameters used: alpha = ", x$alpha,
         x$alpha_correction, " correction, ", x$definition,
         " definition\n", sep = "")
 

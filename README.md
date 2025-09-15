@@ -19,7 +19,7 @@ xt <- c(8,20,5,2,5,2,30)
 results <- remode(xt)
 
 # plot result
-barplot(results)
+plot(results)
 
 # Perform stability analysis 
 stability_info <- remode_stability(results)
