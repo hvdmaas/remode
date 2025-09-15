@@ -8,7 +8,7 @@ perform_bootstrap_test = function(candidate, left_minimum, right_minimum, x, alp
 {
   rawdata=rep(1:length(x),x)
   count=0
-  n_boot=1000
+  n_boot=10000
   for(i in 1:n_boot) {
     x_sample=sample(rawdata,sum(x),replace=T)
     ca.count=sum(x_sample==candidate)
