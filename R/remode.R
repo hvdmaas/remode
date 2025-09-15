@@ -1,123 +1,64 @@
-# Code for top-level function remode() and lower level supporting functions
+# remode.R
+source("R/helper_functions.R")
 
-# Helper functions ------------------------
-
-# Helper function 1
-# define fisher test for statistical test for remode_find_maxima
-perform_fisher_test <- function(candidate, left_minimum, right_minimum, x, alpha){
-  p_left <- fisher.test(matrix(c(x[candidate], sum(x) - x[candidate], x[left_minimum], sum(x) - x[left_minimum]), ncol = 2),
-                        alternative = "greater")$p.value
-  p_right <- fisher.test(matrix(c(x[candidate], sum(x) - x[candidate], x[right_minimum], sum(x) - x[right_minimum]), ncol = 2),
-                         alternative = "greater")$p.value
-
-  if (p_left < alpha && p_right < alpha) return(candidate)
-}
-
-#  Helper function 2
-# define binomial test for statistical test for remode_find_maxima
-perform_binomial_test <- function(candidate, left_minimum, right_minimum, x, alpha){
-  p_left <- binom.test(c(x[candidate], x[left_minimum]),alternative='greater')$p.value
-  p_right <- binom.test(c(x[candidate], x[right_minimum]),alternative='greater')$p.value
-
-  if (p_left < alpha && p_right < alpha) return(candidate)
-}
-
-# Helper function 3
-# Recursive function used inside remode()
-remode_find_maxima <- function(x, alpha = 0.05, check = FALSE, test_func) {
-
-  # Early return for short vectors
-  if (length(x) < 3) {
-    if (check) print(paste('x =', paste(x,collapse=","),'stop'))
-    return(integer(0))
-  }
-  if (check)
-    print(paste('x =', paste(x,collapse=",")))
-
-
-  candidate <- which.max(x) # position candidate maximum
-  left_minimum <- which.min(x[1:candidate]) # position left minimum
-  right_minimum <- which.min(x[candidate:length(x)]) + candidate - 1 # position right minimum
-
-  if (check) {
-    print(paste('locations extrema =', paste(c(left_minimum, candidate, right_minimum),collapse=",")))
-  }
-
-  # perform chosen statistical test on both sides
-  result <- if ((x[candidate] > x[left_minimum]) & (x[candidate] > x[right_minimum])) {
-    test_func(candidate, left_minimum, right_minimum, x, alpha)
-  }
-
-  if (check) {
-    print(paste("mode detected at:", result))
-  }
-
-  # recursive calls on left and right sides of candidate
-  c(result,
-    remode_find_maxima(x[1:(candidate - 1)], alpha = alpha, check = check, test_func = test_func),
-    remode_find_maxima(x[(candidate + 1):length(x)], alpha = alpha, check = check, test_func = test_func) + candidate)
-}
-
+#' @importFrom stats chisq.test fisher.test binom.test
+#' @importFrom graphics legend lines barplot text
+#' @importFrom utils head
+NULL
 
 # Main function ----------
-#' Performs a recursive mode detection function for ordinal data
+#' @title Recursive Mode Detection for Distributions of Ordinal Data
 #'
-#' @param xt A (non-empty) vector of input data. Either in frequencies (default),
-#'           or as raw data. For raw data, set format_raw argument to TRUE.
-#' @param alpha A value specifying the significance level for the statistical tests. Default is 0.05.
-#' @param alpha_correction A character string or function specifying the method for correcting the alpha level.
-#'                         Options are "none" (no correction;default),
-#'                         "max_modes" (Bonferroni-like correction), or a user-defined function.
-#' @param check A logical variable indicating whether to return input, test, and
-#'          outcome of each recursive step of the algorithm. Default is FALSE.
-#' @param f_sign_test A character string or function specifying the statistical test to use for
-#'          significance testing. Options are "fisher" (default), "binomial", or a user-defined function.
-#' @param format_raw  A logical value indicating whether the input data (`xt`) is raw data.
-#'         If TRUE, data will be converted to a frequency table inside the function. Default is FALSE.
-#' @param levels A numeric vector specifying the categories of the (ordinal) distribution.
-#'        Used for the factor conversion if `format_raw` is TRUE. Default is `seq(min(xt), max(xt))`.
+#' @name remode
 #'
-#' @details The function recursively detects a mode candidate (highest frequency), tests whether
-#' its frequency significantly deviates from the lowest frequencies on both its left and right side.
-#' If significant, the candidate is classified as a mode. The function recursively processes the segments
-#' of the vector to the left and right of the mode candidate, applying the same procedure to
-#' identify additional modes.
+#' @description This function performs a recursive modality detection for ordinal data. It checks for a uniform distribution based on a chi-squared test and, if the distribution is not uniform, recursively splits the distribution at the highest mode and its local minima to determine the number of modes.
+#'
+#' @param xt A numeric vector of ordinal data.
+#' @param alpha The significance level for the chi-squared test. Default is 0.05.
+#' @param f_sign_test A character string or function specifying the statistical test to use for significance testing. Options are "bootstrap" (default), "binomial" (more efficient when N is large), "fisher" (exact fisher test) or a user-defined function. User-defined functions must include the following arguments: candidate, left_minimum, right_minimum, xt, alpha
+#' @param alpha_correction A character string or function specifying the method for correcting the alpha level. Options are "max_modes" (Bonferroni-like correction), "none" (no correction), or a user-defined function. User-defined function must entail alpha and k (number of categories) as arguments.
+#' @param definition Underlying modality definition. If "shape_based", the unifom distribution is classified as unimodal. If "peak_based", a uniform distribution is classified as having zero modes.
+#' @param check A logical variable indicating whether to return input, test, and outcome of each recursive step of the algorithm. Default is FALSE.
+#' @param format_raw A logical value indicating whether the input data (`xt`) is raw data. If TRUE, data will be converted to a frequency table inside the function. Default is FALSE.
+#' @param levels A numeric vector specifying the categories of the (ordinal) distribution. Used for the factor conversion if `format_raw` is TRUE. Default is `seq(min(xt), max(xt))`.
+#' @param ... Additional arguments.
+#'
+#' @details The function recursively detects a mode candidate (highest frequency), tests whether its frequency significantly deviates from the lowest frequencies on both its left and right side. If significant, the candidate is classified as a mode. The function recursively processes the segments of the vector to the left and right of the mode candidate, applying the same procedure to identify additional modes.
 #'
 #' @return A list of class `remode_result` containing:
-  #' \describe{
-  #'   \item{nr_of_modes}{The number of modes identified in the data.}
-  #'   \item{modes}{The indices of the identified modes.}
-  #'   \item{xt}{Input data (as frequency table).}
-  #'   \item{alpha}{The original significance level.}
-  #'   \item{alpha_correction}{The method used for alpha correction.}
-  #' }
+#' \describe{
+#'   \item{nr_of_modes}{The number of modes identified in the data.}
+#'   \item{modes}{The indices of the identified modes.}
+#'   \item{xt}{Input data (as frequency table).}
+#'   \item{alpha}{The original significance level.}
+#'   \item{alpha_correction}{The method used for alpha correction.}
+#' }
 #'
 #' @examples
-#' # Input data as frequencies, Bonferroni-like alpha correction
+#' # Input data as frequencies
 #' data <- c(80, 90, 110, 70, 90)
-#' remode(data, alpha_correction = "max_modes")
+#' result <- remode(data)
+#' summary(result)
 #'
 #' # Raw data input
 #' x <- c(rep(1, 80), rep(2, 90), rep(3, 110), rep(4, 70), rep(5, 90))
-#' remode(x, alpha_correction = "max_modes", format_raw = TRUE)
+#' result <- remode(x, format_raw = TRUE)
+#' summary(result)
 #'
 #' @export
-remode <- function(xt, alpha = 0.05, alpha_correction = c("none", "max_modes"),
-                   check = FALSE, f_sign_test = c("fisher", "binomial"),
-                   format_raw = FALSE, levels = seq(min(xt), max(xt)), ...) {
+remode <- function(xt,
+                   alpha = 0.05,
+                   f_sign_test = c("bootstrap", "binomial", "fisher"),
+                   alpha_correction = c("max_modes", "none"),
+                   definition = c("shape_based", "peak_based"),
+                   check = FALSE,
+                   format_raw = FALSE,
+                   levels = seq(min(xt), max(xt)), ...) {
 
-  # define which stat. function to use based on user input
-  if (is.function(f_sign_test)) { # function defined by user
-    test_func <- f_sign_test
-  } else { # user chooses predefined function
-    test_type <- match.arg(f_sign_test) # fisher is default test
-    test_func <- switch(test_type,
-                        fisher = perform_fisher_test,
-                        binomial = perform_binomial_test)
-  }
+  # DEFINITIONS -----------------
 
-  # convert raw data to table if required
-  if (format_raw) {
+  # frequency count
+  if (format_raw) { # convert raw data if required
     x_factor <- factor(xt, levels = levels)
     xt <- table(x_factor)
   }
@@ -126,54 +67,190 @@ remode <- function(xt, alpha = 0.05, alpha_correction = c("none", "max_modes"),
             If so, please specify by setting format_raw = TRUE.")
   }
 
-  # alpha correction based on user input
-  le <- length(xt)
-  if (is.function(alpha_correction)) { # function defined by user
-    alpha_function <- alpha_correction
-    alpha_cor <- alpha_function(alpha = alpha, le = le)
+  k <- length(xt) # number of categories
+  N <- sum(xt) # sample size
+
+  # set statistical function based on user input
+  if (is.function(f_sign_test)) { # custom user-defined function
+    test_func <- f_sign_test
+
   } else { # user chooses predefined function
-    correction_method <- match.arg(alpha_correction) # default: no correction
-    alpha_cor <- switch(correction_method ,
-                        none = alpha,
-                        max_modes = alpha / (floor((le + 1) / 2)))
+    chosen_test <- match.arg(f_sign_test) # fisher is default test
+    test_func <- switch(chosen_test,
+                        bootstrap = perform_bootstrap_test,
+                        binomial = perform_binomial_test,
+                        fisher = perform_fisher_test,)
   }
 
-  # add zeros to sides and correct results
-  modes <- remode_find_maxima(c(0, xt, 0), alpha = alpha_cor, check = check, test_func = test_func)
-  modes <- modes - 1
+  # correct alpha level based on user input
+  if (is.function(alpha_correction)) { # custom user-defined function
+    alpha_function <- alpha_correction
+    corrected_alpha <- alpha_function(alpha = alpha, k = k)
 
-  nr_of_modes <- length(modes)
+  } else { # user chooses predefined function
+    chosen_alpha_correction <- match.arg(alpha_correction) # default: max_modes
+    corrected_alpha <- switch(chosen_alpha_correction,
+                              max_modes = alpha / (floor((k + 1) / 2)),
+                              none = alpha
+                              )
+  }
 
-  result <- list(nr_of_modes = nr_of_modes, modes = modes, xt = xt, alpha = alpha,
-                 alpha_correction = alpha_correction)
+  # set modality definition based on user input
+  chosen_definition <- match.arg(definition) # default: shape_based
 
-  class(result) <- 'remode_result'
+  # PERFORM REMODE ALGORITHM ----------
 
-  return(result)
+  # execute recursive function
+  modes <- remode_find_maxima(
+    c(0, xt, 0), # apply zero-padding
+    alpha = corrected_alpha,
+    check = check,
+    test_func = test_func
+  )
+  modes <- unlist(modes) # unpack list of detected modes and p-values
+
+  # get p-values and Bayes Factor approximations for each detected mode
+  if(length(modes)>0){ # if modes are found
+    # get p-values and Bayes factors
+    p_values <- modes[seq(2, length(modes), by = 2)]
+    b_factors <- sapply(p_values, bayes_factor)
+
+    modes <- modes[seq(1, length(modes), by = 2)] # extract indices of modes
+    modes <- modes - 1 # correct indices after zero-padding of left side
+
+  } else { # if no modes found, return NULL
+    p_values <- NULL
+    b_factors <- NULL
+  }
+
+  # prepare function output
+  results <- list(
+    nr_of_modes = length(modes),
+    mode_indeces = modes,
+    p_values = p_values,
+    approx_bayes_factors= b_factors,
+    frequency_input_data = xt,
+    alpha = alpha,
+    alpha_corrected = corrected_alpha,
+    alpha_correction = if (is.function(alpha_correction)) "custom" else chosen_alpha_correction,
+    definition = chosen_definition
+  )
+
+  # FOR PEAK-BASED MODALITY DEFINITION: TEST FOR UNIFORMITY
+  if(chosen_definition=="peak_based"){
+    chisq_result = chisq.test(xt) # pearson's Chi square test (goodness of fit)
+
+    if(chisq_result$p.value > 0.05){ # if uniform: modify function output
+      results <- list(
+        nr_of_modes = 0,
+        mode_indeces = "Input distribution is uniform (Pearson's Chi^2 test; p > 0.05). Following a peak-based definition of modality, no modes are detected.",
+        p_values = c("p-value of Chi^2 test: ",chisq_result$p.value),
+        approx_bayes_factors= NULL,
+        frequency_input_data = xt,
+        alpha = NULL,
+        alpha_corrected = NULL,
+        alpha_correction = NULL,
+        definition = chosen_definition
+      )
+
+    }
+  }
+
+  # return result output
+  class(results) <- 'remode_result'
+  return(results)
 }
 
 
-#' Barplot for remode_result
+
+#' @title Plot for remode_result
 #'
-#' The `barplot.remode_result` function provides a way to visualize the output of the `remode`
-#' function using a bar plot, highlighting the identified modes by adjusting the bar density.
+#' @description The `plot.remode_result` function provides a way to visualize the output of the `remode` function using a bar plot, highlighting the identified modes by adjusting the bar density.
 #'
-#' @param remode_result A list of class `remode_result` containing the output of the `remode` function.
+#' @param x A list of class `remode_result` containing the output of the `remode` function.
 #' @param main A character string specifying the main title of the plot. Default is "Modes = (number of modes)".
-#' @param density A numeric vector specifying the density of shading lines, in lines per inch, for the bars.
-#'                Default is 20 for non-mode bars and 50 for mode bars.
+#' @param density A numeric vector specifying the density of shading lines, in lines per inch, for the bars. Default is 20 for non-mode bars and 50 for mode bars.
 #' @param ... Additional arguments passed to the `barplot` function.
 #'
 #' @return None. This function is called for its side effects.
 #'
 #' @examples
 #' data <- c(80, 90, 110, 70, 90)
-#' result <- remode(data, alpha_correction = "max_modes")
-#' barplot(result)
+#' result <- remode(data)
+#' plot(result, xlab="This is my x-axis label", col="red")
 #'
 #' @export
-barplot.remode_result <- function(remode_result, main = paste("Modes =", remode_result$nr_of_modes),
-                                  density = replace(rep(20, length(remode_result$xt)), remode_result$modes, 50), ...){
-  barplot(remode_result$xt, density = density, main = main, ...)
+plot.remode_result <- function(
+    x,
+    main = paste("Number of modes =", x$nr_of_modes),
+    density = replace(
+      rep(20, length(x$frequency_input_data)),
+      x$mode_indeces,
+      50), ...
+){
+
+  # Add headroom for p-values *
+  y_max <- max(x$frequency_input_data) * 1.1 # 10% padding
+
+  # Create barplot and capture midpoints
+  mids <- barplot(x$frequency_input_data,
+                  density = density,
+                  main = main,
+                  ylim = c(0, y_max),
+                  ...)
+
+  # Add stars for p-values on top of mode bars
+  if (!is.null(x$p_values)) {
+    for (i in seq_along(x$mode_indeces)) { # for each mode
+
+      mode_index <- x$mode_indeces[i]
+      pval <- x$p_values[i]
+
+      # assign star notation to p-value
+      if(pval<.001) star='***'
+      else if(pval<.01) star='**'
+      else if(pval<.05) star='*'
+      else star=''
+
+      # add significance star labels as text
+      text(x = mids[mode_index],
+           y = x$frequency_input_data[mode_index] + y_max * 0.02, # small offset
+           labels = star,
+           cex = 0.8)
+    }
+  }
 }
+
+
+#' @title Printing remode_result
+#'
+#' @description Prints a `remode_result` object in easily readable format.
+#'
+#' @param x A list of class `remode_result` returned by the `remode` function.
+#' @param ... Additional arguments.
+#'
+#' @export
+print.remode_result <- function(x, ...) {
+  cat("Recursive modality detection (ReMoDe):\n\n")
+
+  cat("For input data", x$input_data)
+  cat("Number of modes detected:", x$nr_of_modes, "\n\n")
+
+  if (x$nr_of_modes > 0) {
+    for (i in 1:x$nr_of_modes) {
+      cat("  Mode", i, ": at index", x$mode_indeces[[i]],
+          "with p-value =", x$p_values[[i]],
+          "and approx BF =", x$approx_bayes_factors[[i]], "\n")
+    }
+
+    cat("\nParameters used: alpha = ", x$alpha * 100, "%, ",
+        x$alpha_correction, " correction, ", x$definition,
+        " definition\n", sep = "")
+
+  } else {
+    print("Input distribution is uniform (Pearson's Chi^2 test; p > 0.05). Following a peak-based definition of modality, no modes are detected.")
+
+  }
+}
+
 

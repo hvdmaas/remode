@@ -2,40 +2,38 @@
 % Please edit documentation in R/remode.R
 \name{remode}
 \alias{remode}
-\title{Performs a recursive mode detection function for ordinal data}
+\title{Recursive Mode Detection for Distributions of Ordinal Data}
 \usage{
 remode(
   xt,
   alpha = 0.05,
-  alpha_correction = c("none", "max_modes"),
+  f_sign_test = c("bootstrap", "binomial", "fisher"),
+  alpha_correction = c("max_modes", "none"),
+  definition = c("shape_based", "peak_based"),
   check = FALSE,
-  f_sign_test = c("fisher", "binomial"),
   format_raw = FALSE,
   levels = seq(min(xt), max(xt)),
   ...
 )
 }
 \arguments{
-\item{xt}{A (non-empty) vector of input data. Either in frequencies (default),
-or as raw data. For raw data, set format_raw argument to TRUE.}
+\item{xt}{A numeric vector of ordinal data.}
 
-\item{alpha}{A value specifying the significance level for the statistical tests. Default is 0.05.}
+\item{alpha}{The significance level for the chi-squared test. Default is 0.05.}
 
-\item{alpha_correction}{A character string or function specifying the method for correcting the alpha level.
-Options are "none" (no correction;default),
-"max_modes" (Bonferroni-like correction), or a user-defined function.}
+\item{f_sign_test}{A character string or function specifying the statistical test to use for significance testing. Options are "bootstrap" (default), "binomial" (more efficient when N is large), "fisher" (exact fisher test) or a user-defined function. User-defined functions must include the following arguments: candidate, left_minimum, right_minimum, xt, alpha}
 
-\item{check}{A logical variable indicating whether to return input, test, and
-outcome of each recursive step of the algorithm. Default is FALSE.}
+\item{alpha_correction}{A character string or function specifying the method for correcting the alpha level. Options are "max_modes" (Bonferroni-like correction), "none" (no correction), or a user-defined function. User-defined function must entail alpha and k (number of categories) as arguments.}
 
-\item{f_sign_test}{A character string or function specifying the statistical test to use for
-significance testing. Options are "fisher" (default), "binomial", or a user-defined function.}
+\item{definition}{Underlying modality definition. If "shape_based", the unifom distribution is classified as unimodal. If "peak_based", a uniform distribution is classified as having zero modes.}
 
-\item{format_raw}{A logical value indicating whether the input data (`xt`) is raw data.
-If TRUE, data will be converted to a frequency table inside the function. Default is FALSE.}
+\item{check}{A logical variable indicating whether to return input, test, and outcome of each recursive step of the algorithm. Default is FALSE.}
 
-\item{levels}{A numeric vector specifying the categories of the (ordinal) distribution.
-Used for the factor conversion if `format_raw` is TRUE. Default is `seq(min(xt), max(xt))`.}
+\item{format_raw}{A logical value indicating whether the input data (`xt`) is raw data. If TRUE, data will be converted to a frequency table inside the function. Default is FALSE.}
+
+\item{levels}{A numeric vector specifying the categories of the (ordinal) distribution. Used for the factor conversion if `format_raw` is TRUE. Default is `seq(min(xt), max(xt))`.}
+
+\item{...}{Additional arguments.}
 }
 \value{
 A list of class `remode_result` containing:
@@ -48,22 +46,20 @@ A list of class `remode_result` containing:
 }
 }
 \description{
-Performs a recursive mode detection function for ordinal data
+This function performs a recursive modality detection for ordinal data. It checks for a uniform distribution based on a chi-squared test and, if the distribution is not uniform, recursively splits the distribution at the highest mode and its local minima to determine the number of modes.
 }
 \details{
-The function recursively detects a mode candidate (highest frequency), tests whether
-its frequency significantly deviates from the lowest frequencies on both its left and right side.
-If significant, the candidate is classified as a mode. The function recursively processes the segments
-of the vector to the left and right of the mode candidate, applying the same procedure to
-identify additional modes.
+The function recursively detects a mode candidate (highest frequency), tests whether its frequency significantly deviates from the lowest frequencies on both its left and right side. If significant, the candidate is classified as a mode. The function recursively processes the segments of the vector to the left and right of the mode candidate, applying the same procedure to identify additional modes.
 }
 \examples{
-# Input data as frequencies, Bonferroni-like alpha correction
+# Input data as frequencies
 data <- c(80, 90, 110, 70, 90)
-remode(data, alpha_correction = "max_modes")
+result <- remode(data)
+summary(result)
 
 # Raw data input
 x <- c(rep(1, 80), rep(2, 90), rep(3, 110), rep(4, 70), rep(5, 90))
-remode(x, alpha_correction = "max_modes", format_raw = TRUE)
+result <- remode(x, format_raw = TRUE)
+summary(result)
 
 }
