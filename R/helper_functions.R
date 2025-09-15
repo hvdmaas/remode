@@ -17,6 +17,7 @@ perform_bootstrap_test = function(candidate, left_minimum, right_minimum, x, alp
     if(ca.count > le.count & ca.count > ri.count) count=count+1
   }
   p=1-count/n_boot
+  print('done')
   if(p <alpha) return(c(candidate,p))
 }
 
