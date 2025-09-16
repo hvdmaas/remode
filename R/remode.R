@@ -21,7 +21,7 @@ NULL
 #' @param check A logical variable indicating whether to return input, test, and outcome of each recursive step of the algorithm. Default is FALSE.
 #' @param format_raw A logical value indicating whether the input data (`xt`) is raw data. If TRUE, data will be converted to a frequency table inside the function. Default is FALSE.
 #' @param levels A numeric vector specifying the categories of the (ordinal) distribution. Used for the factor conversion if `format_raw` is TRUE. Default is `seq(min(xt), max(xt))`.
-#' @param ... Additional arguments.
+#' @param n_boot Number of bootstrap samples. Only used if f_dign_test = "bootstrap".
 #'
 #' @details The function recursively detects a mode candidate (highest frequency), tests whether its frequency significantly deviates from the lowest frequencies on both its left and right side. If significant, the candidate is classified as a mode. The function recursively processes the segments of the vector to the left and right of the mode candidate, applying the same procedure to identify additional modes.
 #'
@@ -53,7 +53,9 @@ remode <- function(xt,
                    definition = c("shape_based", "peak_based"),
                    check = FALSE,
                    format_raw = FALSE,
-                   levels = seq(min(xt), max(xt)), ...) {
+                   levels = seq(min(xt), max(xt)),
+                   n_boot=10000,
+                   ...){
 
   # DEFINITIONS -----------------
 
@@ -70,16 +72,37 @@ remode <- function(xt,
   k <- length(xt) # number of categories
   N <- sum(xt) # sample size
 
+  # ARGUMENT VALIDATION & SET UP --------------
+
   # set statistical function based on user input
+  test_args <- list() # function specific arguments
+
   if (is.function(f_sign_test)) { # custom user-defined function
     test_func <- f_sign_test
 
   } else { # user chooses predefined function
-    chosen_test <- match.arg(f_sign_test) # fisher is default test
+    chosen_test <- match.arg(f_sign_test) # bootstrap is default test
+
+    if (chosen_test == "bootstrap") { # if bootstrap, specify n_boot argument
+      test_func <- perform_bootstrap_test
+      test_args$n_boot <- n_boot
+    } else {
+      # Error handling: if n_boot is provided for a non-bootstrap test
+      if (!missing(n_boot) && n_boot != 10000) { # Check if n_boot explicitly changed by  user
+        stop("The 'n_boot' argument is only applicable when f_sign_test is set to 'bootstrap'.")
+      }
+      test_func <- switch(chosen_test,
+                          binomial = perform_binomial_test,
+                          fisher = perform_fisher_test)
+    }
+
+
+
+
     test_func <- switch(chosen_test,
                         bootstrap = perform_bootstrap_test,
                         binomial = perform_binomial_test,
-                        fisher = perform_fisher_test,)
+                        fisher = perform_fisher_test)
   }
 
   # correct alpha level based on user input
@@ -105,7 +128,8 @@ remode <- function(xt,
     c(0, xt, 0), # apply zero-padding
     alpha = corrected_alpha,
     check = check,
-    test_func = test_func
+    test_func = test_func,
+    test_args = test_args # contains n_boot for if test_func is bootstrap
   )
   modes <- unlist(modes) # unpack list of detected modes and p-values
 
@@ -243,7 +267,7 @@ print.remode_result <- function(x, ...) {
           "and approx BF =", x$approx_bayes_factors[[i]], "\n")
     }
 
-    cat("\nParameters used: alpha = ", x$alpha,
+    cat("\nParameters used: alpha = ", x$alpha, ", ",
         x$alpha_correction, " correction, ", x$definition,
         " definition\n", sep = "")
 

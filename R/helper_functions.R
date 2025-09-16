@@ -4,11 +4,10 @@
 # STATISTICAL TESTS TO COMPARE CANDIDATE'S FREQUENCY AGAINST LOCAL MINIMA
 
 # bootstrap test
-perform_bootstrap_test = function(candidate, left_minimum, right_minimum, x, alpha)
+perform_bootstrap_test = function(candidate, left_minimum, right_minimum, x, alpha, n_boot=10000)
 {
   rawdata=rep(1:length(x),x)
   count=0
-  n_boot=10000
   for(i in 1:n_boot) {
     x_sample=sample(rawdata,sum(x),replace=T)
     ca.count=sum(x_sample==candidate)
@@ -17,7 +16,6 @@ perform_bootstrap_test = function(candidate, left_minimum, right_minimum, x, alp
     if(ca.count > le.count & ca.count > ri.count) count=count+1
   }
   p=1-count/n_boot
-  print('done')
   if(p <alpha) return(c(candidate,p))
 }
 
@@ -43,7 +41,7 @@ perform_fisher_test <- function(candidate, left_minimum, right_minimum, x, alpha
 
 
 # RECURSIVE FUNCTION USED INSIDE remode() ---------
-remode_find_maxima <- function(x, alpha = 0.05, check = FALSE, test_func) {
+remode_find_maxima <- function(x, alpha = 0.05, check = FALSE, test_func, test_args) {
 
   # Early return for short vectors
   if (length(x) < 3) {
@@ -64,10 +62,21 @@ remode_find_maxima <- function(x, alpha = 0.05, check = FALSE, test_func) {
                 paste(c(left_minimum, candidate, right_minimum),collapse=",")))
   }
 
+  # get arguments
+  call_args <- c(
+    list(candidate = candidate,
+         left_minimum = left_minimum,
+         right_minimum = right_minimum,
+         x = x,
+         alpha = alpha),
+    test_args # Append the function-specific arguments
+  )
+
   # perform chosen statistical test on both sides
   result <- if (candidate > 1 && candidate < length(x)){
-    test_func(candidate, left_minimum, right_minimum, x, alpha)
+    do.call(test_func, call_args)
   }
+
 
   if (check) {
     print(paste("mode detected at:", result[1], "with p-value:", result[2]))
@@ -79,8 +88,8 @@ remode_find_maxima <- function(x, alpha = 0.05, check = FALSE, test_func) {
   }
 
   # recursive calls on left and right sides of candidate
-  left <- remode_find_maxima(x[1:(candidate - 1)], alpha, check, test_func)
-  right <- remode_find_maxima(x[(candidate + 1):length(x)], alpha, check, test_func)
+  left <- remode_find_maxima(x[1:(candidate - 1)], alpha, check, test_func, test_args)
+  right <- remode_find_maxima(x[(candidate + 1):length(x)], alpha, check, test_func, test_args)
   right <- lapply(right, function(r) c(r[1] + candidate, r[2])) # corrects indices of right side results
 
   c(result_list, left, right)
