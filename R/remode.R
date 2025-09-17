@@ -22,6 +22,7 @@ NULL
 #' @param format_raw A logical value indicating whether the input data (`xt`) is raw data. If TRUE, data will be converted to a frequency table inside the function. Default is FALSE.
 #' @param levels A numeric vector specifying the categories of the (ordinal) distribution. Used for the factor conversion if `format_raw` is TRUE. Default is `seq(min(xt), max(xt))`.
 #' @param n_boot Number of bootstrap samples. Only used if f_dign_test = "bootstrap".
+#' @param ... Additional arguments
 #'
 #' @details The function recursively detects a mode candidate (highest frequency), tests whether its frequency significantly deviates from the lowest frequencies on both its left and right side. If significant, the candidate is classified as a mode. The function recursively processes the segments of the vector to the left and right of the mode candidate, applying the same procedure to identify additional modes.
 #'

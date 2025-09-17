@@ -13,6 +13,7 @@ remode(
   check = FALSE,
   format_raw = FALSE,
   levels = seq(min(xt), max(xt)),
+  n_boot = 10000,
   ...
 )
 }
@@ -33,7 +34,9 @@ remode(
 
 \item{levels}{A numeric vector specifying the categories of the (ordinal) distribution. Used for the factor conversion if `format_raw` is TRUE. Default is `seq(min(xt), max(xt))`.}
 
-\item{...}{Additional arguments.}
+\item{n_boot}{Number of bootstrap samples. Only used if f_dign_test = "bootstrap".}
+
+\item{...}{Additional arguments}
 }
 \value{
 A list of class `remode_result` containing:
