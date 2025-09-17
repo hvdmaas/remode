@@ -49,7 +49,7 @@ A list of class `remode_result` containing:
 }
 }
 \description{
-This function performs a recursive modality detection for ordinal data. It checks for a uniform distribution based on a chi-squared test and, if the distribution is not uniform, recursively splits the distribution at the highest mode and its local minima to determine the number of modes.
+Implementation of the recursive modality detection method (ReMoDe) which detects modes in univariate distributions through recursive significance testing. ReMoDe recursively tests whether the frequency of a local maximum significantly exceeds the frequencies of neighboring local minima on its left and right side.
 }
 \details{
 The function recursively detects a mode candidate (highest frequency), tests whether its frequency significantly deviates from the lowest frequencies on both its left and right side. If significant, the candidate is classified as a mode. The function recursively processes the segments of the vector to the left and right of the mode candidate, applying the same procedure to identify additional modes.

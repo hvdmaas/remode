@@ -4,7 +4,7 @@ Title: Recursive Mode Detection for Distributions of Ordinal Data
 Version: 0.1.0
 Author: Han van der Maas, Madlen Hoffstadt, Javier Garcia-Bernardo
 Maintainer: Madlen Hoffstadt <madlenfeehoffstadt@gmail.com>
-Description: This package includes the remode() fundction for recursive modality detection for ordinal data.
+Description: This package includes the remode() function for recursive modality detection for ordinal data. It is an algorithm specifically designed to estimate the number and location of modes in ordinal data while being robust to large sample sizes.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

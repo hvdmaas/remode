@@ -24,7 +24,7 @@ remode_stability(
 A list containing the stability analysis results.
 }
 \description{
-The `remode_stability` function evaluates the stability of the mode estimation
+remode_stability evaluates the stability of the mode estimation of the remode() function
 by performing jacknife resampling. It generates
 a series of jackknife resamples, calculates the mean and most frequent number of modes for
 each sample, and determines the stability of the original modality estimate.

@@ -11,7 +11,7 @@ NULL
 #'
 #' @name remode
 #'
-#' @description This function performs a recursive modality detection for ordinal data. It checks for a uniform distribution based on a chi-squared test and, if the distribution is not uniform, recursively splits the distribution at the highest mode and its local minima to determine the number of modes.
+#' @description Implementation of the recursive modality detection method (ReMoDe) which detects modes in univariate distributions through recursive significance testing. ReMoDe recursively tests whether the frequency of a local maximum significantly exceeds the frequencies of neighboring local minima on its left and right side.
 #'
 #' @param xt A numeric vector of ordinal data.
 #' @param alpha The significance level for the chi-squared test. Default is 0.05.
