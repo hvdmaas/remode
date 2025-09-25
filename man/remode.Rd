@@ -8,7 +8,6 @@ remode(
   xt,
   alpha = 0.05,
   f_sign_test = c("bootstrap", "binomial", "fisher"),
-  alpha_correction = c("max_modes", "none"),
   definition = c("shape_based", "peak_based"),
   check = FALSE,
   format_raw = FALSE,
@@ -23,8 +22,6 @@ remode(
 \item{alpha}{The significance level for the chi-squared test. Default is 0.05.}
 
 \item{f_sign_test}{A character string or function specifying the statistical test to use for significance testing. Options are "bootstrap" (default), "binomial" (more efficient when N is large), "fisher" (exact fisher test) or a user-defined function. User-defined functions must include the following arguments: candidate, left_minimum, right_minimum, xt, alpha}
-
-\item{alpha_correction}{A character string or function specifying the method for correcting the alpha level. Options are "max_modes" (Bonferroni-like correction), "none" (no correction), or a user-defined function. User-defined function must entail alpha and k (number of categories) as arguments.}
 
 \item{definition}{Underlying modality definition. If "shape_based", the unifom distribution is classified as unimodal. If "peak_based", a uniform distribution is classified as having zero modes.}
 
@@ -58,11 +55,11 @@ The function recursively detects a mode candidate (highest frequency), tests whe
 # Input data as frequencies
 data <- c(80, 90, 110, 70, 90)
 result <- remode(data)
-summary(result)
+print(result)
 
 # Raw data input
 x <- c(rep(1, 80), rep(2, 90), rep(3, 110), rep(4, 70), rep(5, 90))
 result <- remode(x, format_raw = TRUE)
-summary(result)
+print(result)
 
 }

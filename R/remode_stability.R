@@ -21,14 +21,6 @@ source("R/helper_functions.R")
 #'
 #' @return A list containing the stability analysis results.
 #'
-#' @examples
-#' # run remode algorithm
-#' data <- c(80, 90, 110, 70, 90)
-#' result <- remode(data)
-#'
-#' # check stability of remode result
-#' remode_stability(result)
-#'
 #' @export
 remode_stability <- function(remode_result, iterations = 100, percentage_steps = 10, plot = T){
 

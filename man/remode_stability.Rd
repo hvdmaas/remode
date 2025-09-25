@@ -32,12 +32,3 @@ Stability is determined by te maximum percentage of data removal for which the
 majority of iterations still find the original number of modes.
 Using the same logic, this method also checks the stability of estimated mode location.
 }
-\examples{
-# run remode algorithm
-data <- c(80, 90, 110, 70, 90)
-result <- remode(data)
-
-# check stability of remode result
-remode_stability(result)
-
-}

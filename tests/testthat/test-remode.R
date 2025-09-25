@@ -7,9 +7,7 @@ expected_result <- list(
  nr_of_modes = 2,
  mode_indeces = c(8, 3),
  frequency_input_data = c(70, 80, 110, 30, 70, 100, 90, 120),
- alpha = 0.05,
- alpha_corrected=0.0125,
- alpha_correction = "max_modes"
+ alpha = 0.05
 )
 class(expected_result) <- "remode_result"
 
@@ -25,8 +23,6 @@ test_that("remode() returns correct result", {
  expect_equal(result$frequency_input_data, expected_result$frequency_input_data)
  # Check if the alpha value is correct
  expect_equal(result$alpha, expected_result$alpha)
- # Check if the alpha correction method is correct
- expect_equal(result$alpha_correction, expected_result$alpha_correction)
 })
 
 # remode returns warning about data format

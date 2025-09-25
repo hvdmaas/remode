@@ -1,42 +1,66 @@
 ################# HELPER FUNCTIONS FOR REMODE FUNCTION ########################
 
-
 # STATISTICAL TESTS TO COMPARE CANDIDATE'S FREQUENCY AGAINST LOCAL MINIMA
 
+# for alpha correction in all tests: count number of peaks in distribution
+countpeaks=function(x){
+
+  s <- c(1, sign(diff(x))) # difference between consecutive categories
+  x <- x[s != 0] # only keep elements where count is either in- or decreasing
+  s <- c(1, sign(diff(x))) # recalculate differences for filtered data
+  sum(diff(s) < 0) # count peaks
+
+}
+
 # bootstrap test
-perform_bootstrap_test = function(candidate, left_minimum, right_minimum, x, alpha, n_boot=10000)
-{
-  rawdata=rep(1:length(x),x)
-  count=0
+perform_bootstrap_test = function(candidate, left_minimum, right_minimum, x, alpha, n_boot=10000){
+  rawdata <- rep(1:length(x),x)
+  count <- 0
+
   for(i in 1:n_boot) {
-    x_sample=sample(rawdata,sum(x),replace=T)
-    ca.count=sum(x_sample==candidate)
-    le.count=sum(x_sample==left_minimum)
-    ri.count=sum(x_sample==right_minimum)
+    x_sample <- sample(rawdata,sum(x),replace=T)
+    ca.count <- sum(x_sample==candidate)
+    le.count <- sum(x_sample==left_minimum)
+    ri.count <- sum(x_sample==right_minimum)
     if(ca.count > le.count & ca.count > ri.count) count=count+1
   }
-  p=1-count/n_boot
-  if(p <alpha) return(c(candidate,p))
+
+  alpha_corr <- alpha / max(1,countpeaks(x))
+  p <- 1 - count/n_boot
+
+  if(p < alpha_corr){
+    return(c(candidate, p))
+  }
 }
+
 
 # binomial test
 perform_binomial_test <- function(candidate, left_minimum, right_minimum, x, alpha){
+
   p_left <- binom.test(c(x[candidate], x[left_minimum]),alternative='greater')$p.value
   p_right <- binom.test(c(x[candidate], x[right_minimum]),alternative='greater')$p.value
 
-  if (p_left < alpha && p_right < alpha) return(c(candidate,max(p_left,p_right)))
+  alpha_corr <- alpha / max(1,countpeaks(x))
+
+  if (p_left < alpha_corr && p_right < alpha_corr) return(c(candidate,max(p_left,p_right)))
 }
 
-# fisher test
+
+# exact fisher test
 perform_fisher_test <- function(candidate, left_minimum, right_minimum, x, alpha){
+
   p_left <- fisher.test(matrix(c(x[candidate], sum(x) - x[candidate], x[left_minimum], sum(x) - x[left_minimum]), ncol = 2),
                         alternative = "greater")$p.value
   p_right <- fisher.test(matrix(c(x[candidate], sum(x) - x[candidate], x[right_minimum], sum(x) - x[right_minimum]), ncol = 2),
                          alternative = "greater")$p.value
 
+  alpha_corr <- alpha / max(1,countpeaks(x))
+
   # classify candidate as mode only if both tests were significant;
   # report maximum of the two p-values as a conservative estimate of the joint evidence.
-  if(1-(1-p_left)*(1-p_right) < alpha) return(c(candidate,1-(1-p_left)*(1-p_right)))
+  if(1-(1-p_left)*(1-p_right) < alpha_corr){
+    return(c(candidate,1-(1-p_left)*(1-p_right)))
+  }
 }
 
 
@@ -109,11 +133,15 @@ bayes_factor <- function(p) {
     }
 }
 
-# jacknife function for stability test
+# jackknife function for stability test
 jacknife= function(xt,percentage){
-  x=rep(1:length(xt),xt)
-  delete=sample(1:length(x),percentage*length(x)/100,replace=F)
-  if(length(delete)>0) x=x[-delete]
+
+  x <- rep(1:length(xt),xt)
+  delete <- sample(1:length(x),percentage*length(x)/100,replace=F)
+
+  if(length(delete)>0){
+    x <- x[-delete]
+  }
   x <- factor(x,levels = 1:length(xt))
   table(x)
 }

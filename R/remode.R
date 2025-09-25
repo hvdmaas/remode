@@ -16,7 +16,6 @@ NULL
 #' @param xt A numeric vector of ordinal data.
 #' @param alpha The significance level for the chi-squared test. Default is 0.05.
 #' @param f_sign_test A character string or function specifying the statistical test to use for significance testing. Options are "bootstrap" (default), "binomial" (more efficient when N is large), "fisher" (exact fisher test) or a user-defined function. User-defined functions must include the following arguments: candidate, left_minimum, right_minimum, xt, alpha
-#' @param alpha_correction A character string or function specifying the method for correcting the alpha level. Options are "max_modes" (Bonferroni-like correction), "none" (no correction), or a user-defined function. User-defined function must entail alpha and k (number of categories) as arguments.
 #' @param definition Underlying modality definition. If "shape_based", the unifom distribution is classified as unimodal. If "peak_based", a uniform distribution is classified as having zero modes.
 #' @param check A logical variable indicating whether to return input, test, and outcome of each recursive step of the algorithm. Default is FALSE.
 #' @param format_raw A logical value indicating whether the input data (`xt`) is raw data. If TRUE, data will be converted to a frequency table inside the function. Default is FALSE.
@@ -39,18 +38,17 @@ NULL
 #' # Input data as frequencies
 #' data <- c(80, 90, 110, 70, 90)
 #' result <- remode(data)
-#' summary(result)
+#' print(result)
 #'
 #' # Raw data input
 #' x <- c(rep(1, 80), rep(2, 90), rep(3, 110), rep(4, 70), rep(5, 90))
 #' result <- remode(x, format_raw = TRUE)
-#' summary(result)
+#' print(result)
 #'
 #' @export
 remode <- function(xt,
                    alpha = 0.05,
                    f_sign_test = c("bootstrap", "binomial", "fisher"),
-                   alpha_correction = c("max_modes", "none"),
                    definition = c("shape_based", "peak_based"),
                    check = FALSE,
                    format_raw = FALSE,
@@ -97,26 +95,10 @@ remode <- function(xt,
                           fisher = perform_fisher_test)
     }
 
-
-
-
     test_func <- switch(chosen_test,
                         bootstrap = perform_bootstrap_test,
                         binomial = perform_binomial_test,
                         fisher = perform_fisher_test)
-  }
-
-  # correct alpha level based on user input
-  if (is.function(alpha_correction)) { # custom user-defined function
-    alpha_function <- alpha_correction
-    corrected_alpha <- alpha_function(alpha = alpha, k = k)
-
-  } else { # user chooses predefined function
-    chosen_alpha_correction <- match.arg(alpha_correction) # default: max_modes
-    corrected_alpha <- switch(chosen_alpha_correction,
-                              max_modes = alpha / (floor((k + 1) / 2)),
-                              none = alpha
-                              )
   }
 
   # set modality definition based on user input
@@ -127,7 +109,7 @@ remode <- function(xt,
   # execute recursive function
   modes <- remode_find_maxima(
     c(0, xt, 0), # apply zero-padding
-    alpha = corrected_alpha,
+    alpha = alpha,
     check = check,
     test_func = test_func,
     test_args = test_args # contains n_boot for if test_func is bootstrap
@@ -156,8 +138,6 @@ remode <- function(xt,
     approx_bayes_factors= b_factors,
     frequency_input_data = xt,
     alpha = alpha,
-    alpha_corrected = corrected_alpha,
-    alpha_correction = if (is.function(alpha_correction)) "custom" else chosen_alpha_correction,
     definition = chosen_definition
   )
 
@@ -173,8 +153,6 @@ remode <- function(xt,
         approx_bayes_factors= NULL,
         frequency_input_data = xt,
         alpha = NULL,
-        alpha_corrected = NULL,
-        alpha_correction = NULL,
         definition = chosen_definition
       )
 
@@ -269,8 +247,7 @@ print.remode_result <- function(x, ...) {
     }
 
     cat("\nParameters used: alpha = ", x$alpha, ", ",
-        x$alpha_correction, " correction, ", x$definition,
-        " definition\n", sep = "")
+        x$definition, " definition\n", sep = "")
 
   } else {
     print("Input distribution is uniform (Pearson's Chi^2 test; p > 0.05). Following a peak-based definition of modality, no modes are detected.")
