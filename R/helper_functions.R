@@ -68,13 +68,20 @@ perform_fisher_test <- function(candidate, left_minimum, right_minimum, x, alpha
 # RECURSIVE FUNCTION USED INSIDE remode() ---------
 remode_find_maxima <- function(x, alpha = 0.05, check = FALSE, test_func, test_args) {
 
+  if(check){
+    print("Note: zero-padding applied to ends of distribution.")
+  }
+
   # Early return for short vectors
   if (length(x) < 3) {
     if (check) print(paste('x =', paste(x,collapse=","),'stop'))
     return(c(integer(0),integer(0)))
   }
-  if (check)
+
+  if (check){
     print(paste('x =', paste(x,collapse=",")))
+  }
+
 
   candidate <- which.max(x) # position candidate maximum
   left_interval <- x[1:(candidate-1)] # intervals on left & right side of candidate

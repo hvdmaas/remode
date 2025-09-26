@@ -29,6 +29,6 @@ The `plot.remode_result` function provides a way to visualize the output of the 
 \examples{
 data <- c(80, 90, 110, 70, 90)
 result <- remode(data)
-plot(result, xlab="This is my x-axis label", col="red")
+plot(result, xlab="This is my x-axis label", col="red", names=-2:2)
 
 }

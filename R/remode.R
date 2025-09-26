@@ -1,5 +1,4 @@
 # remode.R
-source("R/helper_functions.R")
 
 #' @importFrom stats chisq.test fisher.test binom.test
 #' @importFrom graphics legend lines barplot text
@@ -14,7 +13,7 @@ NULL
 #' @description Implementation of the recursive modality detection method (ReMoDe) which detects modes in univariate distributions through recursive significance testing. ReMoDe recursively tests whether the frequency of a local maximum significantly exceeds the frequencies of neighboring local minima on its left and right side.
 #'
 #' @param xt A numeric vector of ordinal data.
-#' @param alpha The significance level for the chi-squared test. Default is 0.05.
+#' @param alpha The significance level for the chi-squared test. Default is 0.05. At each recursive step, α is divided by the number of descriptive maxima in the distribution.
 #' @param f_sign_test A character string or function specifying the statistical test to use for significance testing. Options are "bootstrap" (default), "binomial" (more efficient when N is large), "fisher" (exact fisher test) or a user-defined function. User-defined functions must include the following arguments: candidate, left_minimum, right_minimum, xt, alpha
 #' @param definition Underlying modality definition. If "shape_based", the unifom distribution is classified as unimodal. If "peak_based", a uniform distribution is classified as having zero modes.
 #' @param check A logical variable indicating whether to return input, test, and outcome of each recursive step of the algorithm. Default is FALSE.
@@ -28,10 +27,12 @@ NULL
 #' @return A list of class `remode_result` containing:
 #' \describe{
 #'   \item{nr_of_modes}{The number of modes identified in the data.}
-#'   \item{modes}{The indices of the identified modes.}
-#'   \item{xt}{Input data (as frequency table).}
+#'   \item{mode_indeces}{The indices of the identified modes.}
+#'   \item{p_values}{Max. p-value of each detected mode.}
+#'   \item{approx_bayes_factors}{Approximated Bayes Factors, following Selke et al., 2001}
+#'   \item{frequency_input_data}{Input data (as frequency table).}
 #'   \item{alpha}{The original significance level.}
-#'   \item{alpha_correction}{The method used for alpha correction.}
+#'   \item{definition}{Chosen definition: shape based of peak based.}
 #' }
 #'
 #' @examples
@@ -39,11 +40,13 @@ NULL
 #' data <- c(80, 90, 110, 70, 90)
 #' result <- remode(data)
 #' print(result)
+#' plot(result, xlab="This is my x-axis label", col="red", names=-2:2)
 #'
 #' # Raw data input
 #' x <- c(rep(1, 80), rep(2, 90), rep(3, 110), rep(4, 70), rep(5, 90))
 #' result <- remode(x, format_raw = TRUE)
 #' print(result)
+#' plot(result, xlab="This is my x-axis label", col="red", names=-2:2)
 #'
 #' @export
 remode <- function(xt,
@@ -86,10 +89,6 @@ remode <- function(xt,
       test_func <- perform_bootstrap_test
       test_args$n_boot <- n_boot
     } else {
-      # Error handling: if n_boot is provided for a non-bootstrap test
-      if (!missing(n_boot) && n_boot != 10000) { # Check if n_boot explicitly changed by  user
-        stop("The 'n_boot' argument is only applicable when f_sign_test is set to 'bootstrap'.")
-      }
       test_func <- switch(chosen_test,
                           binomial = perform_binomial_test,
                           fisher = perform_fisher_test)
@@ -180,7 +179,7 @@ remode <- function(xt,
 #' @examples
 #' data <- c(80, 90, 110, 70, 90)
 #' result <- remode(data)
-#' plot(result, xlab="This is my x-axis label", col="red")
+#' plot(result, xlab="This is my x-axis label", col="red", names=-2:2)
 #'
 #' @export
 plot.remode_result <- function(

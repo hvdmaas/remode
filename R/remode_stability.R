@@ -1,7 +1,6 @@
 # Code for top-level remode_stability function, performing stability check on
 # result of remode(), as well as lower-level helper function
 
-source("R/helper_functions.R")
 
 #' @title Barplot for remode result
 #' @importFrom graphics barplot text
