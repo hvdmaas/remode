@@ -8,6 +8,7 @@ countpeaks=function(x){
   s <- c(-1, sign(diff(x))) # difference between consecutive categories
   x <- x[s != 0] # only keep elements where count is either in- or decreasing
   s <- c(-1, sign(diff(x))) # recalculate differences for filtered data
+
   sum(diff(s) < 0) # count peaks
 
 }
