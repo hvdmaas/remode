@@ -137,6 +137,7 @@ remode <- function(xt,
     approx_bayes_factors= b_factors,
     frequency_input_data = xt,
     alpha = alpha,
+    sign_test = chosen_test,
     definition = chosen_definition
   )
 
@@ -152,6 +153,7 @@ remode <- function(xt,
         approx_bayes_factors= NULL,
         frequency_input_data = xt,
         alpha = NULL,
+        sign_test = NULL,
         definition = chosen_definition
       )
 

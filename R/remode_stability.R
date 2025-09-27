@@ -48,7 +48,7 @@ remode_stability <- function(remode_result, iterations = 100, percentage_steps =
     for(j in 1:iterations){
       xt_jacknifed <- jacknife(remode_result$frequency_input_data, percentage = modes$perc[i])
       r <- remode(xt_jacknifed, alpha = remode_result$alpha,
-                  alpha_correction = remode_result$alpha_correction)
+                  f_sign_test = remode_result$sign_test)
       m[j] <- r$nr_of_modes[1] # Store number of modes found in each iteration
       modes_locations[i,r$modes]= modes_locations[i,r$modes] + 1 # Update mode location matrix
     }
