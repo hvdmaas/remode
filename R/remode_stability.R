@@ -67,7 +67,14 @@ remode_stability <- function(remode_result, iterations = 100, percentage_steps =
   modes_locations[nrow(modes),] <- 0
 
   # Determine max percentage of data that can be removed while still finding initial result in min 50% of iterations
-  stable_until <- max(modes$perc[modes$majority_result == 1])
+  first_false <- which(!modes$majority_result)[1] # Find the first percentage (starting from 0%) where majority result is FALSE
+  if (is.na(first_false)) {
+    # if no FALSE found, stable across all perc values
+    stable_until <- max(modes$perc)
+  } else {
+    # otherwise take  value just before the first FALSE
+    stable_until <- modes$perc[first_false - 1]
+  }
 
   # optional: plot
   if(plot){
