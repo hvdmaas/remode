@@ -2,7 +2,7 @@
 # result of remode(), as well as lower-level helper function
 
 
-#' @title Barplot for remode result
+#' @title Barplot for 'remode' result
 #' @importFrom graphics barplot text
 #'
 #' @description remode_stability evaluates the stability of the mode estimation of the remode() function
@@ -11,7 +11,6 @@
 #' each sample, and determines the stability of the original modality estimate.
 #' Stability is determined by te maximum percentage of data removal for which the
 #' majority of iterations still find the original number of modes.
-#' Using the same logic, this method also checks the stability of estimated mode location.
 #'
 #' @param remode_result A list of class `remode_result`, output of remode() function
 #' @param iterations Numeric value specifying the number of random sub-samples to generate for each percentage step. Default is 100.
@@ -21,9 +20,9 @@
 #' @return A list containing the stability analysis results.
 #'
 #' @export
-remode_stability <- function(remode_result, iterations = 100, percentage_steps = 10, plot = T){
+remode_stability <- function(remode_result, iterations = 100, percentage_steps = 10, plot = TRUE){
 
-  if(length(remode_result$mode_indeces) == 0) stop("It appears that either the remode algorithm was not yet applied or that no modes were found. Stability analyses can only be conducted for modes detected by remode().")
+  if(length(remode_result$mode_indeces) == 0) stop("It appears that either the 'remode' algorithm was not yet applied or that no modes were found. Stability analyses can only be conducted for modes detected by remode().")
 
   # Initialize the percentage steps and create a data frame to store results
   modes <- data.frame(perc = seq(0, 100, by = (100/percentage_steps)),
@@ -44,7 +43,7 @@ remode_stability <- function(remode_result, iterations = 100, percentage_steps =
   m=integer(iterations)
   for(i in 2:(percentage_steps)){
 
-    # Perform iterations of jackknife and remode
+    # Perform iterations of jackknife and 'remode'
     for(j in 1:iterations){
       xt_jacknifed <- jacknife(remode_result$frequency_input_data, percentage = modes$perc[i])
       r <- remode(xt_jacknifed, alpha = remode_result$alpha,
@@ -78,7 +77,7 @@ remode_stability <- function(remode_result, iterations = 100, percentage_steps =
 
   # optional: plot
   if(plot){
-    plot(modes$perc, modes$mean_modality, type="S", col = "red", frame = F,
+    plot(modes$perc, modes$mean_modality, type="S", col = "red", frame = FALSE,
          main=paste0("Modes : ", remode_result$nr_of_modes,", stability: ", stable_until ," % of data can be removed"),
          xlab="Percentage of removed data",
          ylab="Modality")

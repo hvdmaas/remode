@@ -2,13 +2,13 @@
 % Please edit documentation in R/remode_stability.R
 \name{remode_stability}
 \alias{remode_stability}
-\title{Barplot for remode result}
+\title{Barplot for 'remode' result}
 \usage{
 remode_stability(
   remode_result,
   iterations = 100,
   percentage_steps = 10,
-  plot = T
+  plot = TRUE
 )
 }
 \arguments{
@@ -30,5 +30,4 @@ a series of jackknife resamples, calculates the mean and most frequent number of
 each sample, and determines the stability of the original modality estimate.
 Stability is determined by te maximum percentage of data removal for which the
 majority of iterations still find the original number of modes.
-Using the same logic, this method also checks the stability of estimated mode location.
 }

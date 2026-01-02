@@ -19,7 +19,7 @@ perform_bootstrap_test = function(candidate, left_minimum, right_minimum, x, alp
   count <- 0
 
   for(i in 1:n_boot) {
-    x_sample <- sample(rawdata,sum(x),replace=T)
+    x_sample <- sample(rawdata,sum(x),replace=TRUE)
     ca.count <- sum(x_sample==candidate)
     le.count <- sum(x_sample==left_minimum)
     ri.count <- sum(x_sample==right_minimum)
@@ -69,17 +69,17 @@ perform_fisher_test <- function(candidate, left_minimum, right_minimum, x, alpha
 remode_find_maxima <- function(x, alpha = 0.05, check = FALSE, test_func, test_args) {
 
   if(check){
-    print("Note: zero-padding applied to ends of distribution.")
+    message("Note: zero-padding applied to ends of distribution.")
   }
 
   # Early return for short vectors
   if (length(x) < 3) {
-    if (check) print(paste('x =', paste(x,collapse=","),'stop'))
+    if (check) message(paste('x =', paste(x,collapse=","),'stop'))
     return(c(integer(0),integer(0)))
   }
 
   if (check){
-    print(paste('x =', paste(x,collapse=",")))
+    message(paste('x =', paste(x,collapse=",")))
   }
 
 
@@ -90,7 +90,7 @@ remode_find_maxima <- function(x, alpha = 0.05, check = FALSE, test_func, test_a
   right_minimum <- which.min(right_interval) + candidate # position right minimum
 
   if (check) {
-    print(paste('locations extrema =',
+    message(paste('locations extrema =',
                 paste(c(left_minimum, candidate, right_minimum),collapse=",")))
   }
 
@@ -111,7 +111,7 @@ remode_find_maxima <- function(x, alpha = 0.05, check = FALSE, test_func, test_a
 
 
   if (check) {
-    print(paste("mode detected at:", result[1], "with p-value:", result[2]))
+    message(paste("mode detected at:", result[1], "with p-value:", result[2]))
   }
 
   result_list=list() # store position & p-value of detected mode in list
@@ -145,7 +145,7 @@ bayes_factor <- function(p) {
 jacknife= function(xt,percentage){
 
   x <- rep(1:length(xt),xt)
-  delete <- sample(1:length(x),percentage*length(x)/100,replace=F)
+  delete <- sample(1:length(x),percentage*length(x)/100,replace=FALSE)
 
   if(length(delete)>0){
     x <- x[-delete]

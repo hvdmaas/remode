@@ -19,7 +19,7 @@ remode(
 \arguments{
 \item{xt}{A numeric vector of ordinal data.}
 
-\item{alpha}{The significance level for the chi-squared test. Default is 0.05. At each recursive step, α is divided by the number of descriptive maxima in the distribution.}
+\item{alpha}{The significance level for the chi-squared test. Default is 0.05. At each recursive step, \eqn{\alpha} is divided by the number of descriptive maxima in the distribution.}
 
 \item{f_sign_test}{A character string or function specifying the statistical test to use for significance testing. Options are "bootstrap" (default), "binomial" (more efficient when N is large), "fisher" (exact fisher test) or a user-defined function. User-defined functions must include the following arguments: candidate, left_minimum, right_minimum, xt, alpha}
 
@@ -36,7 +36,7 @@ remode(
 \item{...}{Additional arguments}
 }
 \value{
-A list of class `remode_result` containing:
+A list of class \code{remode_result} containing:
 \describe{
   \item{nr_of_modes}{The number of modes identified in the data.}
   \item{mode_indeces}{The indices of the identified modes.}
@@ -48,7 +48,7 @@ A list of class `remode_result` containing:
 }
 }
 \description{
-Implementation of the recursive modality detection method (ReMoDe) which detects modes in univariate distributions through recursive significance testing. ReMoDe recursively tests whether the frequency of a local maximum significantly exceeds the frequencies of neighboring local minima on its left and right side.
+Implementation of the recursive modality detection method ('remode') which detects modes in univariate distributions through recursive significance testing. 'remode' recursively tests whether the frequency of a local maximum significantly exceeds the frequencies of neighboring local minima on its left and right side.
 }
 \details{
 The function recursively detects a mode candidate (highest frequency), tests whether its frequency significantly deviates from the lowest frequencies on both its left and right side. If significant, the candidate is classified as a mode. The function recursively processes the segments of the vector to the left and right of the mode candidate, applying the same procedure to identify additional modes.

@@ -11,6 +11,9 @@
 
 \item{...}{Additional arguments.}
 }
+\value{
+No return value, called for its side effects.
+}
 \description{
 Prints a `remode_result` object in easily readable format.
 }
